@@ -1,6 +1,31 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Define interfaces for proper TypeScript support
+interface SpotifyData {
+  spotify_id?: string
+  avatar_url?: string
+  spotify_display_name?: string
+  spotify_country?: string
+  spotify_followers?: number
+}
+
+interface GoogleData {
+  google_id?: string
+  avatar_url?: string
+  email_verified?: boolean
+}
+
+interface AdditionalData extends SpotifyData, GoogleData {
+  [key: string]: any
+}
+
+interface TokenData {
+  access_token: string
+  refresh_token?: string
+  expires_at: Date
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
@@ -19,7 +44,7 @@ export async function GET(request: NextRequest) {
       let firstName = ''
       let lastName = ''
       let userType = 'venue_manager' // default
-      let additionalData = {}
+      let additionalData: AdditionalData = {}
       
       if (provider === 'google') {
         const fullName = data.user.user_metadata?.full_name || ''
@@ -50,7 +75,7 @@ export async function GET(request: NextRequest) {
         if (data.session?.provider_token) {
           await storeSpotifyToken(supabase, data.user.id, {
             access_token: data.session.provider_token,
-            refresh_token: data.session.provider_refresh_token,
+            refresh_token: data.session.provider_refresh_token || '',
             expires_at: new Date(Date.now() + 3600 * 1000) // 1 hour from now
           })
         }
@@ -64,20 +89,28 @@ export async function GET(request: NextRequest) {
         .single()
 
       if (!existingProfile) {
-        // Create new profile
+        // Create new profile - FIXED: Proper typing and safe property access
+        const profileData = {
+          id: data.user.id,
+          email: data.user.email,
+          user_type: userType,
+          first_name: firstName,
+          last_name: lastName,
+          avatar_url: additionalData?.avatar_url || null,
+          created_at: new Date(),
+          updated_at: new Date(),
+          // Add other fields safely
+          ...(additionalData.google_id && { google_id: additionalData.google_id }),
+          ...(additionalData.spotify_id && { spotify_id: additionalData.spotify_id }),
+          ...(additionalData.spotify_display_name && { spotify_display_name: additionalData.spotify_display_name }),
+          ...(additionalData.spotify_country && { spotify_country: additionalData.spotify_country }),
+          ...(additionalData.spotify_followers && { spotify_followers: additionalData.spotify_followers }),
+          ...(additionalData.email_verified !== undefined && { email_verified: additionalData.email_verified })
+        }
+
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            user_type: userType,
-            first_name: firstName,
-            last_name: lastName,
-            avatar_url: additionalData.avatar_url,
-            ...additionalData,
-            created_at: new Date(),
-            updated_at: new Date()
-          })
+          .insert(profileData)
 
         if (profileError) {
           console.error('Profile creation error:', profileError)
@@ -97,7 +130,7 @@ export async function GET(request: NextRequest) {
             email: data.user.email,
             first_name: firstName || existingProfile.first_name,
             last_name: lastName || existingProfile.last_name,
-            avatar_url: additionalData.avatar_url || existingProfile.avatar_url,
+            avatar_url: additionalData?.avatar_url || existingProfile.avatar_url,
             updated_at: new Date()
           })
           .eq('id', data.user.id)
@@ -117,7 +150,7 @@ export async function GET(request: NextRequest) {
       switch (userType) {
         case 'artist':
           return NextResponse.redirect(`${baseUrl}/dashboard/artist${successParam}`)
-        case 'venue':
+        case 'venue_manager':
           return NextResponse.redirect(`${baseUrl}/dashboard/venue${successParam}`)
         case 'admin':
           return NextResponse.redirect(`${baseUrl}/dashboard/admin${successParam}`)
@@ -135,7 +168,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Helper function to store Spotify tokens for API access
-async function storeSpotifyToken(supabase: any, userId: string, tokenData: any) {
+async function storeSpotifyToken(supabase: any, userId: string, tokenData: TokenData) {
   try {
     const { error } = await supabase
       .from('spotify_tokens')
@@ -157,7 +190,7 @@ async function storeSpotifyToken(supabase: any, userId: string, tokenData: any) 
 }
 
 // Helper function to create artist record for Spotify users
-async function createArtistRecord(supabase: any, userId: string, spotifyData: any) {
+async function createArtistRecord(supabase: any, userId: string, spotifyData: AdditionalData) {
   try {
     // Check if artist record already exists
     const { data: existingArtist } = await supabase
