@@ -66,6 +66,11 @@ export function ArtistList({ filters }: ArtistListProps) {
   const loadArtists = async () => {
     setLoading(true)
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       let query = supabase
         .from("artists")
         .select("*", { count: "exact" })

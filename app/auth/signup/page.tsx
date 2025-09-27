@@ -37,6 +37,12 @@ export default function SignupPage() {
     setError(null)
     setSuccess(null)
 
+    if (!supabase) {
+      setError("Application configuration error. Please try again later.")
+      setIsLoading(false)
+      return
+    }
+
     // Validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill in all required fields")
@@ -114,6 +120,12 @@ export default function SignupPage() {
     setIsLoading(true)
     setError(null)
 
+    if (!supabase) {
+      setError("Application configuration error. Please try again later.")
+      setIsLoading(false)
+      return
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -133,6 +145,12 @@ export default function SignupPage() {
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
+
+    if (!supabase) {
+      setError("Application configuration error. Please try again later.")
+      setIsLoading(false)
+      return
+    }
 
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({

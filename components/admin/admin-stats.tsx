@@ -41,6 +41,11 @@ export function AdminStats() {
   const loadStats = async () => {
     setLoading(true)
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       // Get all stats in parallel
       const [
         { count: totalUsers },

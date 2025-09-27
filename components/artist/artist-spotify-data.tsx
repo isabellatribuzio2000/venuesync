@@ -59,6 +59,11 @@ export function ArtistSpotifyData({ artistId }: ArtistSpotifyDataProps) {
   const loadSpotifyData = async () => {
     setLoading(true)
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       // Get artist's Spotify ID
       const { data: artist } = await supabase
         .from("artists")

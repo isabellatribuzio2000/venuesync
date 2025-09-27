@@ -85,6 +85,11 @@ export function BookingList({ filters, userType }: BookingListProps) {
   const loadBookings = async () => {
     setLoading(true)
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       let query = supabase
         .from("bookings")
         .select(`

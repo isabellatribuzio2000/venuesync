@@ -99,6 +99,11 @@ export function AdminUserManagement({ users: initialUsers = [] }: AdminUserManag
   const updateUserRole = async (userId: string, newRole: string) => {
     setIsLoading(true)
     try {
+      if (!supabase) {
+        setIsLoading(false)
+        return
+      }
+      
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -122,6 +127,11 @@ export function AdminUserManagement({ users: initialUsers = [] }: AdminUserManag
   const deleteUser = async (userId: string) => {
     setIsLoading(true)
     try {
+      if (!supabase) {
+        setIsLoading(false)
+        return
+      }
+      
       // Note: This requires admin privileges on Supabase
       const { error } = await supabase.auth.admin.deleteUser(userId)
       if (error) throw error

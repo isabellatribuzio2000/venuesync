@@ -51,6 +51,11 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   const loadNotifications = async () => {
     setLoading(true)
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -69,6 +74,10 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   }
 
   const setupRealtimeSubscription = () => {
+    if (!supabase) {
+      return
+    }
+    
     const channel = supabase
       .channel("notifications")
       .on(
@@ -99,6 +108,10 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
 
   const markAsRead = async (notificationId: string) => {
     try {
+      if (!supabase) {
+        return
+      }
+      
       const { error } = await supabase
         .from("notifications")
         .update({ read: true })
@@ -117,6 +130,10 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
 
   const markAllAsRead = async () => {
     try {
+      if (!supabase) {
+        return
+      }
+      
       const { error } = await supabase
         .from("notifications")
         .update({ read: true })

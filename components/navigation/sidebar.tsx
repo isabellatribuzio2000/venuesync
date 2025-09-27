@@ -104,6 +104,10 @@ export function Sidebar({ className }: SidebarProps) {
   useEffect(() => {
     const getUser = async () => {
       try {
+        if (!supabase) {
+          return
+        }
+        
         const { data: { user: authUser } } = await supabase.auth.getUser()
         
         if (authUser) {
@@ -166,6 +170,11 @@ export function Sidebar({ className }: SidebarProps) {
   const handleLogout = async () => {
     setLogoutLoading(true)
     try {
+      if (!supabase) {
+        setLogoutLoading(false)
+        return
+      }
+      
       const { error } = await supabase.auth.signOut()
       if (error) {
         console.error("Logout error:", error)

@@ -27,6 +27,12 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(null)
 
+    if (!supabase) {
+      setError("Application configuration error. Please try again later.")
+      setIsLoading(false)
+      return
+    }
+
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email,
@@ -85,6 +91,12 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(null)
 
+    if (!supabase) {
+      setError("Application configuration error. Please try again later.")
+      setIsLoading(false)
+      return
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -110,6 +122,12 @@ export default function LoginPage() {
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
+
+    if (!supabase) {
+      setError("Application configuration error. Please try again later.")
+      setIsLoading(false)
+      return
+    }
 
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({

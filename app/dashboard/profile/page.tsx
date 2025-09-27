@@ -13,6 +13,19 @@ import { cn } from "@/lib/utils"
 export default async function ProfilePage() {
   const supabase = await createClient()
 
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-white">Configuration Required</h1>
+          <p className="text-gray-400">
+            Application is not properly configured for this environment.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const { data, error } = await supabase.auth.getUser()
   if (error || !data?.user) {
     redirect("/auth/login")

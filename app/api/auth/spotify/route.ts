@@ -41,6 +41,10 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
 
+    if (!supabase) {
+      return NextResponse.redirect(new URL("/auth/login?error=configuration_error", request.url))
+    }
+
     // Exchange code for access token
     const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {
       method: "POST",

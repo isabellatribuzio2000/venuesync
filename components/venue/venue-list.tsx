@@ -85,6 +85,11 @@ export function VenueList({ filters }: VenueListProps) {
   const loadVenues = async () => {
     setLoading(true)
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       let query = supabase
         .from("venues")
         .select("*", { count: "exact" })

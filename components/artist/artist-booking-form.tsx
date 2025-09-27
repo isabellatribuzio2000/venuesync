@@ -72,6 +72,16 @@ export function ArtistBookingForm({ artistId }: ArtistBookingFormProps) {
 
     setLoading(true)
     try {
+      if (!supabase) {
+        toast({
+          title: "Configuration Error",
+          description: "Application is not properly configured",
+          variant: "destructive",
+        })
+        setLoading(false)
+        return
+      }
+      
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("User not authenticated")
 

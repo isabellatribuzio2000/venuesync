@@ -19,19 +19,27 @@ export default function TestPage() {
 
     try {
       // Test 1: Supabase Connection
-      try {
-        const { data, error } = await supabase.auth.getUser()
-        results["Supabase Connection"] = !error
-      } catch {
+      if (!supabase) {
         results["Supabase Connection"] = false
+      } else {
+        try {
+          const { data, error } = await supabase.auth.getUser()
+          results["Supabase Connection"] = !error
+        } catch {
+          results["Supabase Connection"] = false
+        }
       }
 
       // Test 2: Database Access
-      try {
-        const { data, error } = await supabase.from("profiles").select("count").limit(1)
-        results["Database Access"] = !error
-      } catch {
+      if (!supabase) {
         results["Database Access"] = false
+      } else {
+        try {
+          const { data, error } = await supabase.from("profiles").select("count").limit(1)
+          results["Database Access"] = !error
+        } catch {
+          results["Database Access"] = false
+        }
       }
 
       // Test 3: Toast System

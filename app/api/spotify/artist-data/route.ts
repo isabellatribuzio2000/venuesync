@@ -14,6 +14,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient()
 
+    if (!supabase) {
+      return NextResponse.json({ error: "Configuration error" }, { status: 500 })
+    }
+
     // Get user's Spotify token
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {

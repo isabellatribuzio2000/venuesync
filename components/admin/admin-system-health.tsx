@@ -48,6 +48,11 @@ export function AdminSystemHealth() {
   const loadSystemHealth = async () => {
     setLoading(true)
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       // Test database connection
       const startTime = Date.now()
       const { data, error } = await supabase.from("profiles").select("count").limit(1)

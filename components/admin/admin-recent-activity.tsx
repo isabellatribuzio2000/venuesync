@@ -40,6 +40,11 @@ export function AdminRecentActivity() {
   const loadRecentActivity = async () => {
     setLoading(true)
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       // Get recent profiles (users)
       const { data: profiles } = await supabase
         .from("profiles")

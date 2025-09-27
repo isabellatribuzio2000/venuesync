@@ -62,6 +62,16 @@ export function BookingActions({ booking, userType }: BookingActionsProps) {
   const updateBookingStatus = async (status: string) => {
     setActionLoading(status)
     try {
+      if (!supabase) {
+        toast({
+          title: "Configuration Error",
+          description: "Application is not properly configured",
+          variant: "destructive",
+        })
+        setActionLoading(null)
+        return
+      }
+      
       const { error } = await supabase
         .from("bookings")
         .update({ 

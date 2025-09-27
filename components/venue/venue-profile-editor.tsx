@@ -116,6 +116,11 @@ export function VenueProfileEditor({ venueId, onSave, onCancel }: VenueProfileEd
 
     setLoading(true)
     try {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
+      
       const { data, error } = await supabase
         .from("venues")
         .select("*")
@@ -187,6 +192,16 @@ export function VenueProfileEditor({ venueId, onSave, onCancel }: VenueProfileEd
 
     setSaving(true)
     try {
+      if (!supabase) {
+        toast({
+          title: "Configuration Error",
+          description: "Application is not properly configured",
+          variant: "destructive",
+        })
+        setSaving(false)
+        return
+      }
+      
       const venueData = {
         name: formData.name.trim(),
         address: formData.address.trim(),
@@ -292,6 +307,16 @@ export function VenueProfileEditor({ venueId, onSave, onCancel }: VenueProfileEd
 
     setDeleting(true)
     try {
+      if (!supabase) {
+        toast({
+          title: "Configuration Error",
+          description: "Application is not properly configured",
+          variant: "destructive",
+        })
+        setDeleting(false)
+        return
+      }
+      
       const { error } = await supabase
         .from("venues")
         .delete()
@@ -320,6 +345,11 @@ export function VenueProfileEditor({ venueId, onSave, onCancel }: VenueProfileEd
   const handleImageUpload = async (files: FileList) => {
     setUploadingImages(true)
     try {
+      if (!supabase) {
+        setUploadingImages(false)
+        return
+      }
+      
       const uploadPromises = Array.from(files).map(async (file) => {
         const fileExt = file.name.split('.').pop()
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
