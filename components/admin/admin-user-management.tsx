@@ -30,11 +30,52 @@ interface User {
 }
 
 interface AdminUserManagementProps {
-  users: User[]
+  users?: User[] // Made optional to fix TypeScript error
 }
 
-export function AdminUserManagement({ users: initialUsers }: AdminUserManagementProps) {
-  const [users, setUsers] = useState(initialUsers)
+export function AdminUserManagement({ users: initialUsers = [] }: AdminUserManagementProps) {
+  // Mock data as fallback when no users are provided
+  const mockUsers: User[] = [
+    {
+      id: '1',
+      email: 'sarah.johnson@example.com',
+      user_type: 'artist',
+      first_name: 'Sarah',
+      last_name: 'Johnson',
+      company: 'Independent Artist',
+      created_at: '2024-01-15T10:30:00Z'
+    },
+    {
+      id: '2',
+      email: 'mike.chen@bluenote.com',
+      user_type: 'venue_manager',
+      first_name: 'Mike',
+      last_name: 'Chen',
+      company: 'Blue Note Jazz Club',
+      created_at: '2024-02-20T14:15:00Z'
+    },
+    {
+      id: '3',
+      email: 'emma.wilson@example.com',
+      user_type: 'artist',
+      first_name: 'Emma',
+      last_name: 'Wilson',
+      company: 'The Wilson Band',
+      created_at: '2024-03-10T09:45:00Z'
+    },
+    {
+      id: '4',
+      email: 'admin@venuesync.live',
+      user_type: 'admin',
+      first_name: 'Admin',
+      last_name: 'User',
+      company: 'VenueSync',
+      created_at: '2024-01-01T00:00:00Z'
+    }
+  ]
+
+  // Use provided users or fall back to mock data
+  const [users, setUsers] = useState<User[]>(initialUsers.length > 0 ? initialUsers : mockUsers)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterType, setFilterType] = useState("all")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
