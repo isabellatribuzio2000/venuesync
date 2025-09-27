@@ -226,7 +226,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Booking Form */}
-            {user && profile?.user_type === "venue" && (
+            {user && profile?.user_type === "venue_manager" && (
               <Card className="bg-[#2a2a2a] border-gray-800">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">

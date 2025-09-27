@@ -86,13 +86,14 @@ export async function GET(request: NextRequest) {
     if (existingUser) {
       // Update existing user with Spotify data
       const { error: artistError } = await supabase.from("artists").upsert({
+        user_id: existingUser.id,
         spotify_id: spotifyProfile.id,
         name: spotifyProfile.display_name || spotifyProfile.id,
         followers: spotifyProfile.followers?.total || 0,
         image_url: spotifyProfile.images?.[0]?.url,
         external_urls: spotifyProfile.external_urls,
         updated_at: new Date().toISOString(),
-      })
+      }, { onConflict: 'user_id' })
 
       if (artistError) console.error("Error updating artist record:", artistError)
       user = existingUser
@@ -125,6 +126,7 @@ export async function GET(request: NextRequest) {
 
         // Create artist record
         const { error: artistError } = await supabase.from("artists").insert({
+          user_id: authData.user.id,
           spotify_id: spotifyProfile.id,
           name: spotifyProfile.display_name || spotifyProfile.id,
           followers: spotifyProfile.followers?.total || 0,

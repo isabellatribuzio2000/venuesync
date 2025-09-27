@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       // Extract user information based on provider
       let firstName = ''
       let lastName = ''
-      let userType = 'venue_manager' // default
+      let userType = 'venue_manager'
       let additionalData: AdditionalData = {}
       
       if (provider === 'google') {
@@ -206,10 +206,9 @@ async function createArtistRecord(supabase: any, userId: string, spotifyData: Ad
           user_id: userId,
           spotify_id: spotifyData.spotify_id,
           name: spotifyData.spotify_display_name,
-          followers_count: spotifyData.spotify_followers || 0,
-          country: spotifyData.spotify_country,
-          profile_image_url: spotifyData.avatar_url,
-          is_verified: true, // Spotify users are verified
+          followers: spotifyData.spotify_followers || 0,
+          image_url: spotifyData.avatar_url,
+          popularity: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })

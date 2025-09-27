@@ -4,7 +4,7 @@
 name: venuesync
 api_location: ""
 output_location: ".next"
-app_build_command: "npm run build"
+app_build_command: "pnpm build"
 api_build_command: ""
 app_location: "/"
 skip_app_build: false
@@ -48,7 +48,7 @@ global_headers:
   X-Frame-Options: DENY
   X-XSS-Protection: "1; mode=block"
   Referrer-Policy: origin-when-cross-origin
-  Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.spotify.com; frame-src 'none';"
+  Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.spotify.com https://accounts.spotify.com; frame-src 'none';"
 
 # MIME types
 mime_types:
