@@ -24,6 +24,20 @@ interface ArtistPageProps {
   }
 }
 
+// Define the Artist interface for proper typing
+interface Artist {
+  id: string
+  name: string
+  bio?: string
+  genres?: string[]
+  followers: number
+  popularity: number
+  image_url?: string
+  external_urls?: {
+    spotify?: string
+  }
+}
+
 export default async function ArtistPage({ params }: ArtistPageProps) {
   const supabase = await createClient()
   const { id } = params
@@ -38,6 +52,9 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
   if (error || !artist) {
     notFound()
   }
+
+  // Type the artist data properly
+  const typedArtist = artist as Artist
 
   // Get user profile to check if they can book
   const { data: { user } } = await supabase.auth.getUser()
@@ -80,33 +97,33 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <Music className="w-8 h-8 text-[#10b981]" />
-                <h1 className="text-3xl font-bold text-white">{artist.name}</h1>
+                <h1 className="text-3xl font-bold text-white">{typedArtist.name}</h1>
                 <Badge 
                   className={cn(
                     "text-white",
-                    getPopularityColor(artist.popularity)
+                    getPopularityColor(typedArtist.popularity)
                   )}
                 >
-                  {getPopularityLabel(artist.popularity)}
+                  {getPopularityLabel(typedArtist.popularity)}
                 </Badge>
               </div>
               <div className="flex items-center gap-6 text-gray-400 mb-2">
                 <div className="flex items-center">
                   <Users className="w-5 h-5 mr-2" />
-                  <span>{formatFollowers(artist.followers)} followers</span>
+                  <span>{formatFollowers(typedArtist.followers)} followers</span>
                 </div>
                 <div className="flex items-center">
                   <TrendingUp className="w-5 h-5 mr-2" />
-                  <span>{artist.popularity}% popularity</span>
+                  <span>{typedArtist.popularity}% popularity</span>
                 </div>
                 <div className="flex items-center">
                   <Star className="w-5 h-5 mr-2 fill-current text-yellow-400" />
                   <span>4.8 rating</span>
                 </div>
               </div>
-              {artist.genres && artist.genres.length > 0 && (
+              {typedArtist.genres && typedArtist.genres.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {artist.genres.map((genre, index) => (
+                  {typedArtist.genres.map((genre: string, index: number) => (
                     <Badge 
                       key={index}
                       variant="secondary" 
@@ -125,18 +142,18 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Artist Image */}
-            {artist.image_url && (
+            {typedArtist.image_url && (
               <Card className="bg-[#2a2a2a] border-gray-800">
                 <CardContent className="p-0">
                   <div className="relative">
                     <img
-                      src={artist.image_url}
-                      alt={artist.name}
+                      src={typedArtist.image_url}
+                      alt={typedArtist.name}
                       className="w-full h-64 object-cover rounded-t-lg"
                     />
-                    {artist.external_urls?.spotify && (
+                    {typedArtist.external_urls?.spotify && (
                       <Button
-                        onClick={() => window.open(artist.external_urls.spotify, '_blank')}
+                        onClick={() => window.open(typedArtist.external_urls?.spotify, '_blank')}
                         className="absolute bottom-4 right-4 bg-[#1DB954] hover:bg-[#1ed760] text-white"
                       >
                         <Play className="w-4 h-4 mr-2" />
@@ -149,7 +166,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
             )}
 
             {/* Spotify Data */}
-            <ArtistSpotifyData artistId={artist.id} />
+            <ArtistSpotifyData artistId={typedArtist.id} />
 
             {/* Artist Details */}
             <Card className="bg-[#2a2a2a] border-gray-800">
@@ -162,7 +179,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
                     <Users className="w-5 h-5 text-[#10b981]" />
                     <div>
                       <p className="text-sm text-gray-400">Followers</p>
-                      <p className="text-white font-semibold">{formatFollowers(artist.followers)}</p>
+                      <p className="text-white font-semibold">{formatFollowers(typedArtist.followers)}</p>
                     </div>
                   </div>
                   
@@ -170,7 +187,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
                     <TrendingUp className="w-5 h-5 text-[#10b981]" />
                     <div>
                       <p className="text-sm text-gray-400">Popularity</p>
-                      <p className="text-white font-semibold">{artist.popularity}%</p>
+                      <p className="text-white font-semibold">{typedArtist.popularity}%</p>
                     </div>
                   </div>
 
@@ -178,7 +195,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
                     <Music className="w-5 h-5 text-[#10b981]" />
                     <div>
                       <p className="text-sm text-gray-400">Genres</p>
-                      <p className="text-white font-semibold">{artist.genres?.join(", ") || "N/A"}</p>
+                      <p className="text-white font-semibold">{typedArtist.genres?.join(", ") || "N/A"}</p>
                     </div>
                   </div>
 
@@ -191,10 +208,10 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
                   </div>
                 </div>
 
-                {artist.external_urls?.spotify && (
+                {typedArtist.external_urls?.spotify && (
                   <div className="pt-4 border-t border-gray-700">
                     <Button
-                      onClick={() => window.open(artist.external_urls.spotify, '_blank')}
+                      onClick={() => window.open(typedArtist.external_urls?.spotify, '_blank')}
                       className="bg-[#1DB954] hover:bg-[#1ed760] text-white"
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
@@ -221,7 +238,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ArtistBookingForm artistId={artist.id} />
+                  <ArtistBookingForm artistId={typedArtist.id} />
                 </CardContent>
               </Card>
             )}
@@ -254,7 +271,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <Button 
-                    onClick={() => window.location.href = `/artists/${artist.id}/edit`}
+                    onClick={() => window.location.href = `/artists/${typedArtist.id}/edit`}
                     className="w-full bg-[#10b981] hover:bg-[#0d9d6b] text-white"
                   >
                     Edit Profile
@@ -278,15 +295,15 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Followers</span>
-                  <span className="text-white font-semibold">{formatFollowers(artist.followers)}</span>
+                  <span className="text-white font-semibold">{formatFollowers(typedArtist.followers)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Popularity</span>
-                  <span className="text-white font-semibold">{artist.popularity}%</span>
+                  <span className="text-white font-semibold">{typedArtist.popularity}%</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Genres</span>
-                  <span className="text-white font-semibold">{artist.genres?.length || 0}</span>
+                  <span className="text-white font-semibold">{typedArtist.genres?.length || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Rating</span>
