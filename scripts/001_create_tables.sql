@@ -1,6 +1,7 @@
 -- Create artists table
 CREATE TABLE IF NOT EXISTS public.artists (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   spotify_id TEXT UNIQUE,
   name TEXT NOT NULL,
   followers INTEGER DEFAULT 0,
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.artists (
 -- Create venues table
 CREATE TABLE IF NOT EXISTS public.venues (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   location TEXT NOT NULL,
   city TEXT NOT NULL,

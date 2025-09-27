@@ -283,7 +283,7 @@ export default async function VenuePage({ params }: VenuePageProps) {
             )}
 
             {/* Venue Manager Actions */}
-            {user && profile?.user_type === "venue" && (
+            {user && profile?.user_type === "venue_manager" && (
               <Card className="bg-[#2a2a2a] border-gray-800">
                 <CardHeader>
                   <CardTitle className="text-white">Manage Venue</CardTitle>

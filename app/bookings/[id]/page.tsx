@@ -64,7 +64,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
   // Check if user is authorized to view this booking
   const isAuthorized = booking.user_id === user.id || 
     (profile.user_type === "admin") ||
-    (profile.user_type === "venue" && booking.venue_id) ||
+    (profile.user_type === "venue_manager" && booking.venue_id) ||
     (profile.user_type === "artist" && booking.artist_id)
 
   if (!isAuthorized) {
