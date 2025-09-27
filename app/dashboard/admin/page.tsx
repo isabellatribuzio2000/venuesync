@@ -3,8 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { AdminStats } from "@/components/admin/admin-stats"
 import { AdminUserManagement } from "@/components/admin/admin-user-management"
-import AdminSystemHealth from '@/components/admin/admin-system-health'
-import AdminRecentActivity from '@/components/admin/admin-recent-activity'
+import { AdminSystemHealth } from '@/components/admin/admin-system-health'
+import { AdminRecentActivity } from '@/components/admin/admin-recent-activity'
 import { Loading } from "@/components/ui/loading"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Shield, Users, Activity, BarChart3 } from "lucide-react"
