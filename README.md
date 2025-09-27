@@ -1,4 +1,4 @@
-# VenueSync - Music Venue Booking Platform
+# VenueSync - Music Venue Booking
 
 VenueSync is a comprehensive B2B SaaS platform that connects artists with venue managers for live event bookings. Built with Next.js 14, Supabase, and modern web technologies.
 
