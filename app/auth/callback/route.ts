@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       let firstName = ''
       let lastName = ''
       let userType = 'venue_manager' // default
-      let additionalData = {}
+      let additionalData: any = {}
       
       if (provider === 'google') {
         const fullName = data.user.user_metadata?.full_name || ''

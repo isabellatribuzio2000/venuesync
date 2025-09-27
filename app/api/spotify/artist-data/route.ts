@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { data: any } = await supabase
+    const { data } = await supabase
       .from("spotify_tokens")
       .select("access_token, refresh_token, expires_at")
       .eq("user_id", user.id)
@@ -61,18 +61,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch artist data from Spotify
-    const [topTracksResponse, albumsResponse, audioFeaturesResponse] = await Promise.all([
+    const [topTracksResponse, albumsResponse] = await Promise.all([
       fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       }),
       fetch(`https://api.spotify.com/v1/artists/${artistId}/albums?limit=5&market=US`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }),
-      fetch(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },

@@ -106,7 +106,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
               </div>
               {artist.genres && artist.genres.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {artist.genres.map((genre, index) => (
+                  {artist.genres.map((genre: string, index: number) => (
                     <Badge 
                       key={index}
                       variant="secondary" 

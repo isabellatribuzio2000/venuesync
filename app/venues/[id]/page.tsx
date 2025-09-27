@@ -127,7 +127,7 @@ export default async function VenuePage({ params }: VenuePageProps) {
                         className="w-full h-64 object-cover rounded-t-lg"
                       />
                     </div>
-                    {venue.images.slice(1, 5).map((image, index) => (
+                    {venue.images.slice(1, 5).map((image: string, index: number) => (
                       <img
                         key={index}
                         src={image}

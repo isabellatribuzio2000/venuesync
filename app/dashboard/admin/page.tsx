@@ -29,6 +29,13 @@ export default async function AdminDashboard() {
     redirect("/dashboard")
   }
 
+  // Get users for admin management
+  const { data: users } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50)
+
   return (
     <div className="min-h-screen bg-[#1a1a1a] text-white">
       <div className="container mx-auto px-6 py-8">
@@ -106,7 +113,7 @@ export default async function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <Suspense fallback={<Loading text="Loading users..." />}>
-                <AdminUserManagement />
+                <AdminUserManagement users={users || []} />
               </Suspense>
             </CardContent>
           </Card>

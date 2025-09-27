@@ -12,7 +12,8 @@ import {
   Plus,
   Edit,
   Trash2,
-  CheckCircle
+  CheckCircle,
+  Activity as ActivityIcon
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -189,7 +190,7 @@ export function AdminRecentActivity() {
     <div className="space-y-4">
       {activities.length === 0 ? (
         <div className="text-center py-8">
-          <Activity className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+          <ActivityIcon className="w-12 h-12 text-gray-500 mx-auto mb-4" />
           <p className="text-gray-400">No recent activity</p>
         </div>
       ) : (

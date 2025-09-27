@@ -96,7 +96,7 @@ export default async function ArtistDashboard() {
                   </div>
                   {artist.genres && artist.genres.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-3">
-                      {artist.genres.slice(0, 3).map((genre, index) => (
+                      {artist.genres.slice(0, 3).map((genre: string, index: number) => (
                         <Badge 
                           key={index}
                           variant="secondary" 
