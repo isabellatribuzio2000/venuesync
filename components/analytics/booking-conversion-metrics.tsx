@@ -1,202 +1,199 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { Target, TrendingUp, Users, Calendar, CheckCircle } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Progress } from "@/components/ui/progress"
+import { 
+  TrendingUp, 
+  TrendingDown,
+  Users, 
+  Calendar,
+  DollarSign,
+  Target
+} from "lucide-react"
 
-interface ConversionData {
-  stage: string
-  count: number
-  percentage: number
-  color: string
+interface ConversionMetrics {
+  totalBookings: number
+  conversionRate: number
+  averageBookingValue: number
+  topConvertingSources: Array<{
+    source: string
+    bookings: number
+    conversionRate: number
+    revenue: number
+  }>
+  monthlyTrends: Array<{
+    month: string
+    bookings: number
+    revenue: number
+    conversionRate: number
+  }>
+  funnelSteps: Array<{
+    step: string
+    visitors: number
+    conversions: number
+    rate: number
+  }>
 }
-
-interface WeeklyData {
-  week: string
-  inquiries: number
-  bookings: number
-  conversion: number
-}
-
-const initialConversionData: ConversionData[] = [
-  { stage: "Initial Inquiries", count: 1250, percentage: 100, color: "#E5E7EB" },
-  { stage: "Venue Matches", count: 890, percentage: 71, color: "#93C5FD" },
-  { stage: "Proposals Sent", count: 520, percentage: 42, color: "#60A5FA" },
-  { stage: "Negotiations", count: 280, percentage: 22, color: "#3B82F6" },
-  { stage: "Confirmed Bookings", count: 165, percentage: 13, color: "#1DB954" },
-]
-
-const weeklyData: WeeklyData[] = [
-  { week: "Week 1", inquiries: 280, bookings: 32, conversion: 11.4 },
-  { week: "Week 2", inquiries: 320, bookings: 45, conversion: 14.1 },
-  { week: "Week 3", inquiries: 295, bookings: 38, conversion: 12.9 },
-  { week: "Week 4", inquiries: 355, bookings: 50, conversion: 14.1 },
-]
 
 export function BookingConversionMetrics() {
-  const [conversionData, setConversionData] = useState(initialConversionData)
-  const [currentMetrics, setCurrentMetrics] = useState({
-    overallConversion: 13.2,
-    avgResponseTime: 4.2,
-    successRate: 78.5,
-  })
+  const [data, setData] = useState<ConversionMetrics | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Simulate real-time updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      setConversionData((prev) =>
-        prev.map((stage, index) => {
-          const baseCount = initialConversionData[index].count
-          const variation = Math.floor(Math.random() * 40 - 20)
-          const newCount = Math.max(0, baseCount + variation)
-          const percentage = index === 0 ? 100 : (newCount / prev[0].count) * 100
-
-          return {
-            ...stage,
-            count: newCount,
-            percentage: Math.round(percentage),
-          }
-        }),
-      )
-
-      setCurrentMetrics({
-        overallConversion: +(Math.random() * 5 + 11).toFixed(1),
-        avgResponseTime: +(Math.random() * 2 + 3).toFixed(1),
-        successRate: +(Math.random() * 10 + 75).toFixed(1),
+    const loadData = async () => {
+      setLoading(true)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      setData({
+        totalBookings: 1247,
+        conversionRate: 12.4,
+        averageBookingValue: 2850,
+        topConvertingSources: [
+          { source: "Direct Website", bookings: 456, conversionRate: 18.2, revenue: 1299600 },
+          { source: "Social Media", bookings: 321, conversionRate: 14.7, revenue: 914850 },
+          { source: "Email Campaigns", bookings: 234, conversionRate: 22.1, revenue: 666900 },
+          { source: "Partner Referrals", bookings: 156, conversionRate: 16.8, revenue: 444600 },
+          { source: "Search Ads", bookings: 80, conversionRate: 8.9, revenue: 228000 }
+        ],
+        monthlyTrends: [
+          { month: "Jan", bookings: 98, revenue: 279300, conversionRate: 11.2 },
+          { month: "Feb", bookings: 112, revenue: 319200, conversionRate: 12.8 },
+          { month: "Mar", bookings: 134, revenue: 381900, conversionRate: 13.5 },
+          { month: "Apr", bookings: 156, revenue: 444600, conversionRate: 14.2 },
+          { month: "May", bookings: 189, revenue: 538650, conversionRate: 15.1 },
+          { month: "Jun", bookings: 203, revenue: 578550, conversionRate: 16.3 }
+        ],
+        funnelSteps: [
+          { step: "Website Visitors", visitors: 10000, conversions: 10000, rate: 100 },
+          { step: "Venue Browsers", visitors: 3500, conversions: 3500, rate: 35 },
+          { step: "Profile Views", visitors: 1800, conversions: 1800, rate: 18 },
+          { step: "Booking Inquiries", visitors: 450, conversions: 450, rate: 4.5 },
+          { step: "Confirmed Bookings", visitors: 1247, conversions: 1247, rate: 12.4 }
+        ]
       })
-    }, 8000)
+      setLoading(false)
+    }
 
-    return () => clearInterval(interval)
+    loadData()
   }, [])
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
+  if (loading) {
+    return (
+      <Card className="bg-[#2a2a2a] border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">Booking Conversion Metrics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-4 bg-gray-700 rounded animate-pulse" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!data) {
+    return (
+      <Card className="bg-[#2a2a2a] border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">Booking Conversion Metrics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-400">No conversion data available</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
-    <Card>
+    <Card className="bg-[#2a2a2a] border-gray-800">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Target className="h-5 w-5 text-primary" />
+        <CardTitle className="text-white flex items-center gap-2">
+          <Target className="w-5 h-5 text-[#10b981]" />
           Booking Conversion Metrics
         </CardTitle>
+        <CardDescription className="text-gray-400">
+          Track and optimize your booking conversion rates
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 gap-3">
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Overall Conversion</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-[#1a1a1a] rounded-lg">
+            <div className="flex items-center justify-center w-12 h-12 bg-[#10b981]/20 rounded-lg mx-auto mb-2">
+              <Calendar className="w-6 h-6 text-[#10b981]" />
             </div>
-            <div className="text-lg font-semibold">{currentMetrics.overallConversion}%</div>
-            <div className="text-xs text-muted-foreground">Inquiry to booking rate</div>
+            <p className="text-2xl font-bold text-white">{data.totalBookings.toLocaleString()}</p>
+            <p className="text-sm text-gray-400">Total Bookings</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-2 mb-1">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Response Time</span>
-              </div>
-              <div className="text-lg font-semibold">{currentMetrics.avgResponseTime}h</div>
-              <div className="text-xs text-muted-foreground">Average</div>
+          
+          <div className="text-center p-4 bg-[#1a1a1a] rounded-lg">
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-500/20 rounded-lg mx-auto mb-2">
+              <TrendingUp className="w-6 h-6 text-blue-400" />
             </div>
-
-            <div className="p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Success Rate</span>
-              </div>
-              <div className="text-lg font-semibold">{currentMetrics.successRate}%</div>
-              <div className="text-xs text-muted-foreground">Proposal to booking</div>
+            <p className="text-2xl font-bold text-white">{data.conversionRate}%</p>
+            <p className="text-sm text-gray-400">Conversion Rate</p>
+          </div>
+          
+          <div className="text-center p-4 bg-[#1a1a1a] rounded-lg">
+            <div className="flex items-center justify-center w-12 h-12 bg-green-500/20 rounded-lg mx-auto mb-2">
+              <DollarSign className="w-6 h-6 text-green-400" />
             </div>
+            <p className="text-2xl font-bold text-white">${data.averageBookingValue.toLocaleString()}</p>
+            <p className="text-sm text-gray-400">Avg. Booking Value</p>
           </div>
         </div>
 
-        {/* Conversion Funnel */}
+        {/* Top Converting Sources */}
         <div>
-          <h4 className="font-medium text-sm mb-3">Conversion Funnel</h4>
+          <h3 className="text-lg font-semibold text-white mb-4">Top Converting Sources</h3>
           <div className="space-y-3">
-            {conversionData.map((stage, index) => (
-              <div key={stage.stage} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>{stage.stage}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{formatNumber(stage.count)}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {stage.percentage}%
-                    </Badge>
+            {data.topConvertingSources.map((source, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#10b981]/20 rounded flex items-center justify-center">
+                    <span className="text-[#10b981] font-bold text-sm">#{index + 1}</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{source.source}</p>
+                    <p className="text-sm text-gray-400">{source.bookings} bookings</p>
                   </div>
                 </div>
-                <div className="relative">
-                  <div className="w-full bg-muted rounded-full h-3">
-                    <div
-                      className="h-3 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${stage.percentage}%`,
-                        backgroundColor: stage.color,
-                      }}
-                    ></div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-white font-semibold">{source.conversionRate}%</p>
+                    <p className="text-xs text-gray-400">conversion</p>
                   </div>
-                  {index < conversionData.length - 1 && (
-                    <div className="absolute -bottom-2 right-0 text-xs text-muted-foreground">
-                      -{Math.round(100 - conversionData[index + 1].percentage)}%
-                    </div>
-                  )}
+                  <div className="text-right">
+                    <p className="text-white font-semibold">${source.revenue.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">revenue</p>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Weekly Trend */}
+        {/* Conversion Funnel */}
         <div>
-          <h4 className="font-medium text-sm mb-3">Weekly Conversion Trend</h4>
-          <div className="h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip
-                  formatter={(value, name) => [
-                    name === "conversion" ? `${value}%` : value,
-                    name === "inquiries" ? "Inquiries" : name === "bookings" ? "Bookings" : "Conversion Rate",
-                  ]}
-                />
-                <Bar dataKey="conversion" fill="#1DB954" radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Performance Indicators */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-lg border bg-card">
-            <div className="flex items-center gap-2 mb-1">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Active Leads</span>
-            </div>
-            <div className="text-lg font-semibold">{formatNumber(conversionData[2]?.count || 0)}</div>
-            <div className="text-xs text-muted-foreground">In negotiation</div>
-          </div>
-
-          <div className="p-3 rounded-lg border bg-card">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-medium">This Month</span>
-            </div>
-            <div className="text-lg font-semibold">{formatNumber(conversionData[4]?.count || 0)}</div>
-            <div className="text-xs text-muted-foreground">Confirmed bookings</div>
-          </div>
-        </div>
-
-        <div className="pt-4 border-t">
-          <div className="text-xs text-muted-foreground">
-            Metrics update every 8 seconds • Real-time pipeline tracking
+          <h3 className="text-lg font-semibold text-white mb-4">Conversion Funnel</h3>
+          <div className="space-y-3">
+            {data.funnelSteps.map((step, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">{step.step}</span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-400">{step.visitors.toLocaleString()}</span>
+                    <span className="text-sm text-white font-semibold">{step.rate}%</span>
+                  </div>
+                </div>
+                <Progress value={step.rate} className="h-2" />
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>

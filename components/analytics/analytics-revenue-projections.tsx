@@ -1,258 +1,255 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts"
-import { DollarSign, TrendingUp, Calendar, Target, BarChart3 } from "lucide-react"
 import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { 
+  DollarSign, 
+  TrendingUp, 
+  TrendingDown,
+  Calendar,
+  Target,
+  BarChart3
+} from "lucide-react"
 
-interface MonthlyProjection {
-  month: string
-  actual: number
+interface RevenueProjection {
+  period: string
   projected: number
-  target: number
+  actual: number
+  variance: number
+  bookings: number
+  averageTicketPrice: number
 }
 
-interface RevenueSource {
-  name: string
-  value: number
-  color: string
-  growth: number
+interface RevenueData {
+  currentRevenue: number
+  projectedRevenue: number
+  growthRate: number
+  monthlyProjections: RevenueProjection[]
+  topRevenueStreams: Array<{
+    stream: string
+    revenue: number
+    percentage: number
+    growth: number
+  }>
+  quarterlyTargets: Array<{
+    quarter: string
+    target: number
+    actual: number
+    progress: number
+  }>
 }
-
-const monthlyData: MonthlyProjection[] = [
-  { month: "Jan", actual: 450000, projected: 480000, target: 500000 },
-  { month: "Feb", actual: 520000, projected: 550000, target: 580000 },
-  { month: "Mar", actual: 680000, projected: 720000, target: 750000 },
-  { month: "Apr", actual: 0, projected: 850000, target: 900000 },
-  { month: "May", actual: 0, projected: 920000, target: 980000 },
-  { month: "Jun", actual: 0, projected: 1050000, target: 1100000 },
-]
-
-const initialRevenueSources: RevenueSource[] = [
-  { name: "Venue Bookings", value: 2800000, color: "#1DB954", growth: 15.2 },
-  { name: "Commission Fees", value: 420000, color: "#1E3A8A", growth: 22.8 },
-  { name: "Premium Features", value: 180000, color: "#059669", growth: 45.3 },
-  { name: "Consulting Services", value: 120000, color: "#7C3AED", growth: 38.7 },
-]
 
 export function AnalyticsRevenueProjections() {
-  const [revenueSources, setRevenueSources] = useState(initialRevenueSources)
-  const [selectedTimeframe, setSelectedTimeframe] = useState<"monthly" | "quarterly" | "yearly">("monthly")
-  const [currentMetrics, setCurrentMetrics] = useState({
-    totalRevenue: 3520000,
-    growthRate: 18.5,
-    projectedAnnual: 8400000,
-  })
+  const [data, setData] = useState<RevenueData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Simulate real-time updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRevenueSources((prev) =>
-        prev.map((source) => ({
-          ...source,
-          value: source.value + Math.floor(Math.random() * 10000 - 5000),
-          growth: +(Math.random() * 20 + 10).toFixed(1),
-        })),
-      )
+    const loadData = async () => {
+      setLoading(true)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      setData({
+        currentRevenue: 2850000,
+        projectedRevenue: 4200000,
+        growthRate: 15.2,
+        monthlyProjections: [
+          { period: "Jan", projected: 320000, actual: 298000, variance: -6.9, bookings: 45, averageTicketPrice: 6622 },
+          { period: "Feb", projected: 380000, actual: 365000, variance: -3.9, bookings: 52, averageTicketPrice: 7019 },
+          { period: "Mar", projected: 420000, actual: 445000, variance: 6.0, bookings: 58, averageTicketPrice: 7672 },
+          { period: "Apr", projected: 450000, actual: 478000, variance: 6.2, bookings: 62, averageTicketPrice: 7710 },
+          { period: "May", projected: 480000, actual: 512000, variance: 6.7, bookings: 68, averageTicketPrice: 7529 },
+          { period: "Jun", projected: 520000, actual: 552000, variance: 6.2, bookings: 74, averageTicketPrice: 7459 }
+        ],
+        topRevenueStreams: [
+          { stream: "Venue Bookings", revenue: 1850000, percentage: 64.9, growth: 18.5 },
+          { stream: "Artist Commissions", revenue: 650000, percentage: 22.8, growth: 12.3 },
+          { stream: "Premium Features", revenue: 250000, percentage: 8.8, growth: 25.7 },
+          { stream: "Advertising", revenue: 100000, percentage: 3.5, growth: 8.9 }
+        ],
+        quarterlyTargets: [
+          { quarter: "Q1", target: 1200000, actual: 1108000, progress: 92.3 },
+          { quarter: "Q2", target: 1500000, actual: 1542000, progress: 102.8 },
+          { quarter: "Q3", target: 1800000, actual: 0, progress: 0 },
+          { quarter: "Q4", target: 2000000, actual: 0, progress: 0 }
+        ]
+      })
+      setLoading(false)
+    }
 
-      setCurrentMetrics((prev) => ({
-        totalRevenue: prev.totalRevenue + Math.floor(Math.random() * 20000 - 10000),
-        growthRate: +(Math.random() * 10 + 15).toFixed(1),
-        projectedAnnual: prev.projectedAnnual + Math.floor(Math.random() * 100000 - 50000),
-      }))
-    }, 12000)
-
-    return () => clearInterval(interval)
+    loadData()
   }, [])
 
-  const formatRevenue = (amount: number) => {
-    if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`
-    }
-    if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(0)}K`
-    }
-    return `$${amount}`
+  const getVarianceColor = (variance: number) => {
+    if (variance > 0) return "text-green-400"
+    if (variance < -5) return "text-red-400"
+    return "text-yellow-400"
   }
 
-  const totalCurrentRevenue = revenueSources.reduce((sum, source) => sum + source.value, 0)
-  const avgGrowthRate = revenueSources.reduce((sum, source) => sum + source.growth, 0) / revenueSources.length
+  const getVarianceIcon = (variance: number) => {
+    if (variance > 0) return <TrendingUp className="w-4 h-4 text-green-400" />
+    return <TrendingDown className="w-4 h-4 text-red-400" />
+  }
+
+  if (loading) {
+    return (
+      <Card className="bg-[#2a2a2a] border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">Revenue Projections</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-4 bg-gray-700 rounded animate-pulse" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!data) {
+    return (
+      <Card className="bg-[#2a2a2a] border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">Revenue Projections</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-400">No revenue data available</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
-    <Card>
+    <Card className="bg-[#2a2a2a] border-gray-800">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" />
+        <CardTitle className="text-white flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-[#10b981]" />
           Revenue Projections
         </CardTitle>
+        <CardDescription className="text-gray-400">
+          Track revenue performance and future projections
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 gap-4">
-          <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="h-5 w-5 text-primary" />
-              <span className="font-medium">Total Revenue (YTD)</span>
+        {/* Key Revenue Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-[#1a1a1a] rounded-lg">
+            <div className="flex items-center justify-center w-12 h-12 bg-[#10b981]/20 rounded-lg mx-auto mb-2">
+              <DollarSign className="w-6 h-6 text-[#10b981]" />
             </div>
-            <div className="text-2xl font-bold">{formatRevenue(currentMetrics.totalRevenue)}</div>
-            <div className="flex items-center gap-2 mt-1">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <span className="text-sm text-green-600">+{currentMetrics.growthRate}% vs last year</span>
-            </div>
+            <p className="text-2xl font-bold text-white">${data.currentRevenue.toLocaleString()}</p>
+            <p className="text-sm text-gray-400">Current Revenue</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-2 mb-1">
-                <Target className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Annual Target</span>
-              </div>
-              <div className="text-lg font-semibold">{formatRevenue(currentMetrics.projectedAnnual)}</div>
-              <div className="text-xs text-muted-foreground">
-                {Math.round((currentMetrics.totalRevenue / currentMetrics.projectedAnnual) * 100)}% achieved
-              </div>
+          
+          <div className="text-center p-4 bg-[#1a1a1a] rounded-lg">
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-500/20 rounded-lg mx-auto mb-2">
+              <Target className="w-6 h-6 text-blue-400" />
             </div>
-
-            <div className="p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-2 mb-1">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Avg Growth</span>
-              </div>
-              <div className="text-lg font-semibold">+{avgGrowthRate.toFixed(1)}%</div>
-              <div className="text-xs text-muted-foreground">Across all revenue streams</div>
+            <p className="text-2xl font-bold text-white">${data.projectedRevenue.toLocaleString()}</p>
+            <p className="text-sm text-gray-400">Projected Revenue</p>
+          </div>
+          
+          <div className="text-center p-4 bg-[#1a1a1a] rounded-lg">
+            <div className="flex items-center justify-center w-12 h-12 bg-green-500/20 rounded-lg mx-auto mb-2">
+              <TrendingUp className="w-6 h-6 text-green-400" />
             </div>
+            <p className="text-2xl font-bold text-white">+{data.growthRate}%</p>
+            <p className="text-sm text-gray-400">Growth Rate</p>
           </div>
         </div>
 
-        {/* Timeframe Selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">View:</span>
-          {(["monthly", "quarterly", "yearly"] as const).map((timeframe) => (
-            <Button
-              key={timeframe}
-              size="sm"
-              variant={selectedTimeframe === timeframe ? "default" : "outline"}
-              onClick={() => setSelectedTimeframe(timeframe)}
-              className="text-xs"
-            >
-              {timeframe.charAt(0).toUpperCase() + timeframe.slice(1)}
-            </Button>
-          ))}
-        </div>
-
-        {/* Revenue Trend Chart */}
+        {/* Monthly Projections */}
         <div>
-          <h4 className="font-medium text-sm mb-3">Revenue Trend vs Projections</h4>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip
-                  formatter={(value) => [formatRevenue(Number(value)), ""]}
-                  labelFormatter={(label) => `Month: ${label}`}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="actual"
-                  stroke="#1DB954"
-                  strokeWidth={3}
-                  dot={{ fill: "#1DB954", strokeWidth: 2, r: 4 }}
-                  name="Actual"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="projected"
-                  stroke="#1E3A8A"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ fill: "#1E3A8A", strokeWidth: 2, r: 3 }}
-                  name="Projected"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="target"
-                  stroke="#DC2626"
-                  strokeWidth={2}
-                  strokeDasharray="3 3"
-                  dot={{ fill: "#DC2626", strokeWidth: 2, r: 3 }}
-                  name="Target"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Revenue Sources Breakdown */}
-        <div>
-          <h4 className="font-medium text-sm mb-3">Revenue Sources</h4>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Pie Chart */}
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={revenueSources} cx="50%" cy="50%" innerRadius={40} outerRadius={80} dataKey="value">
-                    {revenueSources.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => [formatRevenue(Number(value)), "Revenue"]} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Legend with Growth */}
-            <div className="space-y-3">
-              {revenueSources.map((source) => (
-                <div key={source.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: source.color }}></div>
-                    <span className="text-sm">{source.name}</span>
+          <h3 className="text-lg font-semibold text-white mb-4">Monthly Performance</h3>
+          <div className="space-y-3">
+            {data.monthlyProjections.map((month, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#10b981]/20 rounded flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-[#10b981]" />
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">{formatRevenue(source.value)}</div>
-                    <Badge variant="outline" className="text-xs">
-                      +{source.growth}%
-                    </Badge>
+                  <div>
+                    <p className="text-white font-medium">{month.period}</p>
+                    <p className="text-sm text-gray-400">{month.bookings} bookings</p>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-white font-semibold">${month.actual.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">actual</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-400 text-sm">${month.projected.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">projected</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {getVarianceIcon(month.variance)}
+                    <span className={`text-sm font-semibold ${getVarianceColor(month.variance)}`}>
+                      {month.variance > 0 ? '+' : ''}{month.variance}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Performance Summary */}
-        <div className="p-4 rounded-lg border bg-card">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-medium">Q1 Performance Summary</span>
-            <Badge variant="default">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              Above Target
-            </Badge>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Revenue is tracking {Math.round(((currentMetrics.totalRevenue - 1650000) / 1650000) * 100)}% above Q1
-            projections, with strong growth in premium features and consulting services.
+        {/* Revenue Streams */}
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-4">Revenue Streams</h3>
+          <div className="space-y-3">
+            {data.topRevenueStreams.map((stream, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#10b981]/20 rounded flex items-center justify-center">
+                    <span className="text-[#10b981] font-bold text-sm">#{index + 1}</span>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{stream.stream}</p>
+                    <p className="text-sm text-gray-400">{stream.percentage}% of total</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-white font-semibold">${stream.revenue.toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">revenue</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <TrendingUp className="w-4 h-4 text-green-400" />
+                    <span className="text-sm text-green-400 font-semibold">+{stream.growth}%</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="pt-4 border-t">
-          <div className="text-xs text-muted-foreground">
-            Revenue data updates every 12 seconds • Projections based on current booking pipeline
+        {/* Quarterly Targets */}
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-4">Quarterly Targets</h3>
+          <div className="space-y-3">
+            {data.quarterlyTargets.map((quarter, index) => (
+              <div key={index} className="p-4 bg-[#1a1a1a] rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-white font-semibold">{quarter.quarter}</h4>
+                  <Badge className={
+                    quarter.progress >= 100 
+                      ? "bg-green-500/20 text-green-400 border-green-500/30"
+                      : quarter.progress >= 80
+                      ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                      : "bg-red-500/20 text-red-400 border-red-500/30"
+                  }>
+                    {quarter.progress}%
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">Target: ${quarter.target.toLocaleString()}</span>
+                  <span className="text-white">Actual: ${quarter.actual.toLocaleString()}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>

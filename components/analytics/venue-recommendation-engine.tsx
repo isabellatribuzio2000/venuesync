@@ -1,251 +1,205 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Brain, MapPin, Users, Star, DollarSign, Calendar } from "lucide-react"
 import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { 
+  Building2, 
+  MapPin, 
+  Users, 
+  Star,
+  TrendingUp,
+  Calendar
+} from "lucide-react"
 
 interface VenueRecommendation {
   id: string
   name: string
-  location: string
+  city: string
+  state: string
   capacity: number
   matchScore: number
+  reasons: string[]
   estimatedRevenue: number
-  availableDates: number
-  venueType: string
-  demandLevel: "Low" | "Medium" | "High" | "Very High"
   bookingProbability: number
+  image?: string
 }
 
-const initialRecommendations: VenueRecommendation[] = [
-  {
-    id: "1",
-    name: "Madison Square Garden",
-    location: "New York, NY",
-    capacity: 20789,
-    matchScore: 95,
-    estimatedRevenue: 2800000,
-    availableDates: 3,
-    venueType: "Arena",
-    demandLevel: "Very High",
-    bookingProbability: 87,
-  },
-  {
-    id: "2",
-    name: "The Fillmore",
-    location: "San Francisco, CA",
-    capacity: 1315,
-    matchScore: 88,
-    estimatedRevenue: 180000,
-    availableDates: 8,
-    venueType: "Theater",
-    demandLevel: "High",
-    bookingProbability: 92,
-  },
-  {
-    id: "3",
-    name: "Red Rocks Amphitheatre",
-    location: "Morrison, CO",
-    capacity: 9525,
-    matchScore: 92,
-    estimatedRevenue: 950000,
-    availableDates: 5,
-    venueType: "Amphitheater",
-    demandLevel: "Very High",
-    bookingProbability: 78,
-  },
-  {
-    id: "4",
-    name: "The Troubadour",
-    location: "West Hollywood, CA",
-    capacity: 400,
-    matchScore: 85,
-    estimatedRevenue: 45000,
-    availableDates: 12,
-    venueType: "Club",
-    demandLevel: "Medium",
-    bookingProbability: 95,
-  },
-]
-
 export function VenueRecommendationEngine() {
-  const [recommendations, setRecommendations] = useState(initialRecommendations)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [recommendations, setRecommendations] = useState<VenueRecommendation[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Simulate AI recommendation updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRecommendations((prev) =>
-        prev.map((venue) => ({
-          ...venue,
-          matchScore: Math.max(70, Math.min(100, venue.matchScore + (Math.random() * 6 - 3))),
-          bookingProbability: Math.max(60, Math.min(100, venue.bookingProbability + (Math.random() * 10 - 5))),
-          availableDates: Math.max(1, venue.availableDates + Math.floor(Math.random() * 3 - 1)),
-        })),
-      )
-    }, 15000)
+    const loadRecommendations = async () => {
+      setLoading(true)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      setRecommendations([
+        {
+          id: "1",
+          name: "The Grand Theater",
+          city: "New York",
+          state: "NY",
+          capacity: 2500,
+          matchScore: 94,
+          reasons: ["Perfect capacity match", "High fan density", "Great acoustics"],
+          estimatedRevenue: 45000,
+          bookingProbability: 87
+        },
+        {
+          id: "2", 
+          name: "Electric Ballroom",
+          city: "Los Angeles",
+          state: "CA",
+          capacity: 1800,
+          matchScore: 89,
+          reasons: ["Trending venue", "Strong social media presence", "Artist-friendly"],
+          estimatedRevenue: 38000,
+          bookingProbability: 82
+        },
+        {
+          id: "3",
+          name: "Crystal Palace",
+          city: "Chicago",
+          state: "IL", 
+          capacity: 3200,
+          matchScore: 85,
+          reasons: ["Excellent location", "Premium amenities", "High conversion rate"],
+          estimatedRevenue: 52000,
+          bookingProbability: 78
+        },
+        {
+          id: "4",
+          name: "Sunset Arena",
+          city: "Miami",
+          state: "FL",
+          capacity: 2200,
+          matchScore: 82,
+          reasons: ["Growing market", "Tourist destination", "Good weather"],
+          estimatedRevenue: 41000,
+          bookingProbability: 75
+        }
+      ])
+      setLoading(false)
+    }
 
-    return () => clearInterval(interval)
+    loadRecommendations()
   }, [])
 
-  const formatRevenue = (amount: number) => {
-    if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`
-    }
-    if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(0)}K`
-    }
-    return `$${amount}`
+  const getMatchColor = (score: number) => {
+    if (score >= 90) return "bg-green-500/20 text-green-400 border-green-500/30"
+    if (score >= 80) return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+    return "bg-orange-500/20 text-orange-400 border-orange-500/30"
   }
 
-  const formatCapacity = (capacity: number) => {
-    if (capacity >= 1000) {
-      return `${(capacity / 1000).toFixed(1)}K`
-    }
-    return capacity.toString()
-  }
-
-  const getDemandColor = (demand: string) => {
-    switch (demand) {
-      case "Very High":
-        return "destructive"
-      case "High":
-        return "default"
-      case "Medium":
-        return "secondary"
-      case "Low":
-        return "outline"
-      default:
-        return "outline"
-    }
-  }
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    // Shuffle and update recommendations
-    setRecommendations((prev) =>
-      prev
-        .map((venue) => ({
-          ...venue,
-          matchScore: Math.floor(Math.random() * 30) + 70,
-          bookingProbability: Math.floor(Math.random() * 40) + 60,
-        }))
-        .sort((a, b) => b.matchScore - a.matchScore),
+  if (loading) {
+    return (
+      <Card className="bg-[#2a2a2a] border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">Venue Recommendations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-20 bg-gray-700 rounded animate-pulse" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     )
-    setIsRefreshing(false)
   }
-
-  const totalEstimatedRevenue = recommendations.reduce((sum, venue) => sum + venue.estimatedRevenue, 0)
-  const avgMatchScore = recommendations.reduce((sum, venue) => sum + venue.matchScore, 0) / recommendations.length
 
   return (
-    <Card>
+    <Card className="bg-[#2a2a2a] border-gray-800">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-primary" />
-          AI Venue Recommendations
+        <CardTitle className="text-white flex items-center gap-2">
+          <Building2 className="w-5 h-5 text-[#10b981]" />
+          Venue Recommendations
         </CardTitle>
+        <CardDescription className="text-gray-400">
+          AI-powered venue matching for your next tour
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Engine Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 mb-1">
-              <Star className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Avg Match</span>
-            </div>
-            <div className="text-lg font-semibold">{avgMatchScore.toFixed(1)}%</div>
-            <div className="text-xs text-muted-foreground">AI confidence score</div>
-          </div>
-
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Total Revenue</span>
-            </div>
-            <div className="text-lg font-semibold">{formatRevenue(totalEstimatedRevenue)}</div>
-            <div className="text-xs text-muted-foreground">Projected potential</div>
-          </div>
-        </div>
-
-        {/* Recommendations List */}
+      <CardContent>
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="font-medium text-sm">Top Recommendations</h4>
-            <Button size="sm" variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-              <Brain className="h-4 w-4 mr-2" />
-              {isRefreshing ? "Analyzing..." : "Refresh AI"}
-            </Button>
-          </div>
-
-          {recommendations.map((venue, index) => (
-            <div key={venue.id} className="p-4 rounded-lg border bg-card">
+          {recommendations.map((venue) => (
+            <div key={venue.id} className="p-4 bg-[#1a1a1a] rounded-lg border border-gray-700">
               <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold">{venue.name}</span>
-                    <Badge variant="outline" className="text-xs">
-                      #{index + 1}
-                    </Badge>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-[#10b981]/20 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-[#10b981]" />
                   </div>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-                    {venue.location}
+                  <div>
+                    <h3 className="text-white font-semibold">{venue.name}</h3>
+                    <div className="flex items-center gap-1 text-sm text-gray-400">
+                      <MapPin className="w-4 h-4" />
+                      <span>{venue.city}, {venue.state}</span>
+                    </div>
                   </div>
                 </div>
-                <Badge variant="default" className="text-xs">
-                  <Star className="h-3 w-3 mr-1" />
-                  {venue.matchScore.toFixed(0)}%
-                </Badge>
+                <div className="text-right">
+                  <Badge className={getMatchColor(venue.matchScore)}>
+                    {venue.matchScore}% match
+                  </Badge>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span>AI Match Score</span>
-                  <span className="font-medium">{venue.matchScore.toFixed(1)}%</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-500/20 rounded mx-auto mb-1">
+                    <Users className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <p className="text-sm text-white font-semibold">{venue.capacity.toLocaleString()}</p>
+                  <p className="text-xs text-gray-400">Capacity</p>
                 </div>
-                <Progress value={venue.matchScore} className="h-2" />
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-green-500/20 rounded mx-auto mb-1">
+                    <TrendingUp className="w-4 h-4 text-green-400" />
+                  </div>
+                  <p className="text-sm text-white font-semibold">${venue.estimatedRevenue.toLocaleString()}</p>
+                  <p className="text-xs text-gray-400">Est. Revenue</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-purple-500/20 rounded mx-auto mb-1">
+                    <Calendar className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <p className="text-sm text-white font-semibold">{venue.bookingProbability}%</p>
+                  <p className="text-xs text-gray-400">Booking Chance</p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-yellow-500/20 rounded mx-auto mb-1">
+                    <Star className="w-4 h-4 text-yellow-400" />
+                  </div>
+                  <p className="text-sm text-white font-semibold">4.8</p>
+                  <p className="text-xs text-gray-400">Rating</p>
+                </div>
+              </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-3 w-3 text-muted-foreground" />
-                    <span>{formatCapacity(venue.capacity)} capacity</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                    <span>{venue.availableDates} dates available</span>
-                  </div>
+              <div className="mb-3">
+                <h4 className="text-sm text-gray-300 mb-2">Why this venue matches:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {venue.reasons.map((reason, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {reason}
+                    </Badge>
+                  ))}
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      {venue.venueType}
-                    </Badge>
-                    <Badge variant={getDemandColor(venue.demandLevel)} className="text-xs">
-                      {venue.demandLevel} Demand
-                    </Badge>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">{formatRevenue(venue.estimatedRevenue)}</div>
-                    <div className="text-xs text-muted-foreground">{venue.bookingProbability}% booking probability</div>
-                  </div>
-                </div>
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-[#10b981] hover:bg-[#0d9d6b] text-white">
+                  View Details
+                </Button>
+                <Button size="sm" variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
+                  Contact Venue
+                </Button>
               </div>
             </div>
           ))}
-        </div>
-
-        <div className="pt-4 border-t">
-          <div className="text-xs text-muted-foreground">
-            AI recommendations update every 15 seconds based on real-time market data
-          </div>
         </div>
       </CardContent>
     </Card>

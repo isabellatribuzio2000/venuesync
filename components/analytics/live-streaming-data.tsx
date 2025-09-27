@@ -1,191 +1,190 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { Activity, Play, TrendingUp, Users } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Progress } from "@/components/ui/progress"
+import { 
+  Play, 
+  Pause, 
+  Volume2, 
+  Users, 
+  TrendingUp,
+  Activity
+} from "lucide-react"
 
-interface StreamingDataPoint {
-  time: string
-  spotify: number
-  appleMusic: number
-  youtube: number
-  total: number
+interface StreamingData {
+  currentListeners: number
+  totalStreams: number
+  peakListeners: number
+  averageListenTime: number
+  topCountries: Array<{
+    country: string
+    listeners: number
+    percentage: number
+  }>
+  topTracks: Array<{
+    name: string
+    artist: string
+    plays: number
+    duration: string
+  }>
 }
 
-const generateDataPoint = (time: string): StreamingDataPoint => ({
-  time,
-  spotify: Math.floor(Math.random() * 50000) + 100000,
-  appleMusic: Math.floor(Math.random() * 30000) + 60000,
-  youtube: Math.floor(Math.random() * 80000) + 150000,
-  total: 0,
-})
-
 export function LiveStreamingData() {
-  const [streamingData, setStreamingData] = useState<StreamingDataPoint[]>(() => {
-    const initialData: StreamingDataPoint[] = []
-    for (let i = 11; i >= 0; i--) {
-      const time = new Date(Date.now() - i * 5 * 60 * 1000).toLocaleTimeString("en-US", {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-      initialData.push(generateDataPoint(time))
-    }
-    return initialData.map((point) => ({
-      ...point,
-      total: point.spotify + point.appleMusic + point.youtube,
-    }))
-  })
+  const [data, setData] = useState<StreamingData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const [currentStats, setCurrentStats] = useState({
-    totalStreams: 0,
-    growthRate: 0,
-    activeListeners: 0,
-  })
-
-  // Simulate real-time updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date().toLocaleTimeString("en-US", {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
+    // Simulate loading streaming data
+    const loadData = async () => {
+      setLoading(true)
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      setData({
+        currentListeners: 1247,
+        totalStreams: 45632,
+        peakListeners: 2156,
+        averageListenTime: 3.2,
+        topCountries: [
+          { country: "United States", listeners: 456, percentage: 36.6 },
+          { country: "United Kingdom", listeners: 234, percentage: 18.8 },
+          { country: "Canada", listeners: 189, percentage: 15.2 },
+          { country: "Australia", listeners: 156, percentage: 12.5 },
+          { country: "Germany", listeners: 98, percentage: 7.9 }
+        ],
+        topTracks: [
+          { name: "Midnight Dreams", artist: "Artist Name", plays: 1234, duration: "3:45" },
+          { name: "Electric Nights", artist: "Artist Name", plays: 987, duration: "4:12" },
+          { name: "Summer Vibes", artist: "Artist Name", plays: 756, duration: "3:28" }
+        ]
       })
+      setLoading(false)
+    }
 
-      setStreamingData((prev) => {
-        const newPoint = generateDataPoint(now)
-        newPoint.total = newPoint.spotify + newPoint.appleMusic + newPoint.youtube
-
-        const newData = [...prev.slice(1), newPoint]
-
-        // Calculate growth rate
-        const currentTotal = newPoint.total
-        const previousTotal = prev[prev.length - 1]?.total || 0
-        const growthRate = previousTotal > 0 ? ((currentTotal - previousTotal) / previousTotal) * 100 : 0
-
-        setCurrentStats({
-          totalStreams: currentTotal,
-          growthRate: Number(growthRate.toFixed(1)),
-          activeListeners: Math.floor(currentTotal * 0.15), // Estimate active listeners
-        })
-
-        return newData
-      })
-    }, 5000)
-
-    return () => clearInterval(interval)
+    loadData()
   }, [])
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(1)}M`
-    }
-    if (num >= 1000) {
-      return `${(num / 1000).toFixed(1)}K`
-    }
-    return num.toString()
+  if (loading) {
+    return (
+      <Card className="bg-[#2a2a2a] border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">Live Streaming Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="h-4 bg-gray-700 rounded animate-pulse" />
+            <div className="h-4 bg-gray-700 rounded animate-pulse" />
+            <div className="h-4 bg-gray-700 rounded animate-pulse" />
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
-  const latestData = streamingData[streamingData.length - 1]
+  if (!data) {
+    return (
+      <Card className="bg-[#2a2a2a] border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white">Live Streaming Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-400">No streaming data available</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
-    <Card>
+    <Card className="bg-[#2a2a2a] border-gray-800">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="h-5 w-5 text-primary animate-pulse" />
+        <CardTitle className="text-white flex items-center gap-2">
+          <Activity className="w-5 h-5 text-[#10b981]" />
           Live Streaming Data
         </CardTitle>
+        <CardDescription className="text-gray-400">
+          Real-time streaming analytics
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Current Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 mb-1">
-              <Play className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Total Streams</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-[#10b981]/20 rounded-lg mx-auto mb-2">
+              <Users className="w-6 h-6 text-[#10b981]" />
             </div>
-            <div className="text-lg font-semibold">{formatNumber(currentStats.totalStreams)}</div>
-            <div className="flex items-center gap-1 text-xs">
-              <TrendingUp className="h-3 w-3" />
-              <span className={currentStats.growthRate >= 0 ? "text-green-600" : "text-red-600"}>
-                {currentStats.growthRate >= 0 ? "+" : ""}
-                {currentStats.growthRate}%
-              </span>
-            </div>
+            <p className="text-2xl font-bold text-white">{data.currentListeners.toLocaleString()}</p>
+            <p className="text-sm text-gray-400">Current Listeners</p>
           </div>
-
-          <div className="p-3 rounded-lg bg-muted/50">
-            <div className="flex items-center gap-2 mb-1">
-              <Users className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Active Listeners</span>
+          
+          <div className="text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-500/20 rounded-lg mx-auto mb-2">
+              <Play className="w-6 h-6 text-blue-400" />
             </div>
-            <div className="text-lg font-semibold">{formatNumber(currentStats.activeListeners)}</div>
-            <div className="text-xs text-muted-foreground">Estimated concurrent</div>
+            <p className="text-2xl font-bold text-white">{data.totalStreams.toLocaleString()}</p>
+            <p className="text-sm text-gray-400">Total Streams</p>
           </div>
-        </div>
-
-        {/* Platform Breakdown */}
-        <div className="space-y-3">
-          <h4 className="font-medium text-sm">Platform Breakdown</h4>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                <span className="text-sm">Spotify</span>
-              </div>
-              <Badge variant="outline">{formatNumber(latestData?.spotify || 0)}</Badge>
+          
+          <div className="text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-purple-500/20 rounded-lg mx-auto mb-2">
+              <TrendingUp className="w-6 h-6 text-purple-400" />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                <span className="text-sm">Apple Music</span>
-              </div>
-              <Badge variant="outline">{formatNumber(latestData?.appleMusic || 0)}</Badge>
+            <p className="text-2xl font-bold text-white">{data.peakListeners.toLocaleString()}</p>
+            <p className="text-sm text-gray-400">Peak Listeners</p>
+          </div>
+          
+          <div className="text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-orange-500/20 rounded-lg mx-auto mb-2">
+              <Volume2 className="w-6 h-6 text-orange-400" />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                <span className="text-sm">YouTube</span>
-              </div>
-              <Badge variant="outline">{formatNumber(latestData?.youtube || 0)}</Badge>
-            </div>
+            <p className="text-2xl font-bold text-white">{data.averageListenTime}h</p>
+            <p className="text-sm text-gray-400">Avg. Listen Time</p>
           </div>
         </div>
 
-        {/* Real-time Chart */}
+        {/* Top Countries */}
         <div>
-          <h4 className="font-medium text-sm mb-3">Last Hour Trend</h4>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={streamingData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip
-                  formatter={(value, name) => [formatNumber(Number(value)), name]}
-                  labelFormatter={(label) => `Time: ${label}`}
-                />
-                <Line type="monotone" dataKey="spotify" stroke="#1DB954" strokeWidth={2} dot={false} name="Spotify" />
-                <Line
-                  type="monotone"
-                  dataKey="appleMusic"
-                  stroke="#007AFF"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Apple Music"
-                />
-                <Line type="monotone" dataKey="youtube" stroke="#FF0000" strokeWidth={2} dot={false} name="YouTube" />
-              </LineChart>
-            </ResponsiveContainer>
+          <h3 className="text-lg font-semibold text-white mb-4">Top Countries</h3>
+          <div className="space-y-3">
+            {data.topCountries.map((country, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-300">{country.country}</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {country.listeners} listeners
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2 w-32">
+                  <Progress value={country.percentage} className="h-2" />
+                  <span className="text-xs text-gray-400 w-8">{country.percentage}%</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="pt-4 border-t">
-          <div className="text-xs text-muted-foreground flex items-center gap-2">
-            <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-            Live • Updates every 5 seconds
+        {/* Top Tracks */}
+        <div>
+          <h3 className="text-lg font-semibold text-white mb-4">Top Tracks</h3>
+          <div className="space-y-3">
+            {data.topTracks.map((track, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-[#1a1a1a] rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#10b981]/20 rounded flex items-center justify-center">
+                    <Play className="w-4 h-4 text-[#10b981]" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{track.name}</p>
+                    <p className="text-sm text-gray-400">{track.artist}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-gray-400">
+                  <span>{track.plays} plays</span>
+                  <span>{track.duration}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>
