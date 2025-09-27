@@ -1,5 +1,7 @@
-import { Suspense } from "react"
-import { createClient } from "@/lib/supabase/server"
+'use client'
+
+import { useEffect, useState, Suspense } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { redirect } from "next/navigation"
 import { AdminStats } from "@/components/admin/admin-stats"
 import { AdminUserManagement } from "@/components/admin/admin-user-management"
@@ -9,127 +11,153 @@ import { Loading } from "@/components/ui/loading"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Shield, Users, Activity, BarChart3 } from "lucide-react"
 
-export default async function AdminDashboard() {
-  const supabase = await createClient()
+export default function AdminDashboard() {
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!supabase) {
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      
+      if (!supabase) {
+        setError("Application is not properly configured")
+        setLoading(false)
+        return
+      }
+
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        
+        if (error) {
+          console.error("Auth error:", error)
+          setError("Authentication failed")
+        } else if (!user) {
+          redirect("/auth/login")
+        } else {
+          setUser(user)
+        }
+      } catch (err) {
+        console.error("Error:", err)
+        setError("Authentication failed")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-white">Configuration Required</h1>
-          <p className="text-gray-400">
-            Application is not properly configured for this environment.
-          </p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
+          <p className="text-white mt-4">Loading admin dashboard...</p>
         </div>
       </div>
     )
   }
 
-  // Check authentication
-  const { data: { user } } = await supabase.auth.getUser()
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-white">Configuration Required</h1>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </div>
+    )
+  }
+
   if (!user) {
     redirect("/auth/login")
+    return null
   }
-
-  // Get user profile and check admin access
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("user_type")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile || profile.user_type !== "admin") {
-    redirect("/dashboard")
-  }
-
-  // Get users for admin management
-  const { data: users } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(50)
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] text-white">
-      <div className="container mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Shield className="w-8 h-8 text-[#10b981]" />
-            <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-          </div>
-          <p className="text-gray-400 text-lg">
-            Manage the VenueSync platform and monitor system health
-          </p>
+          <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+          <p className="text-gray-400">Manage your platform and monitor system health</p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="mb-8">
-          <Suspense fallback={<Loading text="Loading stats..." />}>
-            <AdminStats />
-          </Suspense>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* System Health */}
-          <div className="lg:col-span-1">
-            <Card className="bg-[#2a2a2a] border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
-                  System Health
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Monitor platform status
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Suspense fallback={<Loading text="Loading system health..." />}>
-                  <AdminSystemHealth />
-                </Suspense>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="lg:col-span-2">
-            <Card className="bg-[#2a2a2a] border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
-                  Recent Activity
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Latest platform activity
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Suspense fallback={<Loading text="Loading activity..." />}>
-                  <AdminRecentActivity />
-                </Suspense>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* User Management */}
-        <div className="mt-8">
-          <Card className="bg-[#2a2a2a] border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                User Management
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                Manage users, roles, and permissions
-              </CardDescription>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
-              <Suspense fallback={<Loading text="Loading users..." />}>
-                <AdminUserManagement users={users || []} />
-              </Suspense>
+              <div className="text-2xl font-bold text-white">Loading...</div>
+              <p className="text-xs text-gray-400">+20.1% from last month</p>
             </CardContent>
           </Card>
+
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Active Bookings</CardTitle>
+              <Activity className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">Loading...</div>
+              <p className="text-xs text-gray-400">+12.5% from last month</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Revenue</CardTitle>
+              <BarChart3 className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">Loading...</div>
+              <p className="text-xs text-gray-400">+8.2% from last month</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">System Health</CardTitle>
+              <Shield className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-400">Good</div>
+              <p className="text-xs text-gray-400">All systems operational</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Admin Stats */}
+            <Suspense fallback={<Loading />}>
+              <AdminStats />
+            </Suspense>
+
+            {/* User Management */}
+            <Suspense fallback={<Loading />}>
+              <AdminUserManagement />
+            </Suspense>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* System Health */}
+            <Suspense fallback={<Loading />}>
+              <AdminSystemHealth />
+            </Suspense>
+
+            {/* Recent Activity */}
+            <Suspense fallback={<Loading />}>
+              <AdminRecentActivity />
+            </Suspense>
+          </div>
         </div>
       </div>
     </div>

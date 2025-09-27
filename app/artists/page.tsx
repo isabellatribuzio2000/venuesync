@@ -1,5 +1,7 @@
-import { Suspense } from "react"
-import { createClient } from "@/lib/supabase/server"
+'use client'
+
+import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { ArtistList } from "@/components/artist/artist-list"
 import { ArtistFilters } from "@/components/artist/artist-filters"
 import { Loading } from "@/components/ui/loading"
@@ -16,11 +18,51 @@ interface SearchParams {
 }
 
 interface ArtistsPageProps {
-  searchParams: SearchParams
+  searchParams?: SearchParams
 }
 
-export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
-  const supabase = await createClient()
+export default function ArtistsPage({ searchParams = {} }: ArtistsPageProps) {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function initialize() {
+      const supabase = createClient()
+      
+      if (!supabase) {
+        setError("Application is not properly configured")
+        setLoading(false)
+        return
+      }
+
+      // No authentication required for public artists page
+      setLoading(false)
+    }
+
+    initialize()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
+          <p className="text-white mt-4">Loading artists...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-white">Configuration Required</h1>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </div>
+    )
+  }
 
   // Get filter values from search params
   const filters = {
@@ -29,50 +71,39 @@ export default async function ArtistsPage({ searchParams }: ArtistsPageProps) {
     min_followers: searchParams.min_followers ? parseInt(searchParams.min_followers) : undefined,
     max_followers: searchParams.max_followers ? parseInt(searchParams.max_followers) : undefined,
     popularity: searchParams.popularity || "",
-    page: searchParams.page ? parseInt(searchParams.page) : 1
+    page: parseInt(searchParams.page || "1")
   }
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] text-white">
-      <div className="container mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Music className="w-8 h-8 text-[#10b981]" />
-            <h1 className="text-3xl font-bold text-white">Artists</h1>
-          </div>
-          <p className="text-gray-400 text-lg">
-            Discover talented artists for your venue
-          </p>
+          <h1 className="text-3xl font-bold mb-2">Artists</h1>
+          <p className="text-gray-400">Discover talented artists for your venue</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="bg-[#2a2a2a] border-gray-800 sticky top-6">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Filter className="w-5 h-5" />
-                  Filters
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Refine your search
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Suspense fallback={<Loading text="Loading filters..." />}>
-                  <ArtistFilters currentFilters={filters} />
-                </Suspense>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Filters */}
+        <div className="mb-8">
+          <ArtistFilters currentFilters={filters} />
+        </div>
 
-          {/* Artists List */}
-          <div className="lg:col-span-3">
-            <Suspense fallback={<Loading text="Loading artists..." />}>
+        {/* Artists List */}
+        <div className="space-y-6">
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Music className="w-5 h-5 mr-2" />
+                All Artists
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                Browse and discover artists that match your criteria
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <ArtistList filters={filters} />
-            </Suspense>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

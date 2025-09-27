@@ -1,5 +1,8 @@
+'use client'
+
+import { useEffect, useState } from "react"
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -16,254 +19,263 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-export default async function ArtistDashboard() {
-  const supabase = await createClient()
+export default function ArtistDashboard() {
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!supabase) {
+  useEffect(() => {
+    async function checkAuth() {
+      const supabase = createClient()
+      
+      if (!supabase) {
+        setError("Application is not properly configured")
+        setLoading(false)
+        return
+      }
+
+      try {
+        const { data, error } = await supabase.auth.getUser()
+        
+        if (error) {
+          console.error("Auth error:", error)
+          setError("Authentication failed")
+        } else if (!data?.user) {
+          redirect("/auth/login")
+        } else {
+          setUser(data.user)
+        }
+      } catch (err) {
+        console.error("Error:", err)
+        setError("Authentication failed")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4 text-white">Configuration Required</h1>
-          <p className="text-gray-400">
-            Application is not properly configured for this environment.
-          </p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
+          <p className="text-white mt-4">Loading artist dashboard...</p>
         </div>
       </div>
     )
   }
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-white">Configuration Required</h1>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
     redirect("/auth/login")
+    return null
   }
-
-  // Get user profile
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
-
-  if (!profile || profile.user_type !== "artist") {
-    redirect("/dashboard")
-  }
-
-  // Get artist data
-  const { data: artist } = await supabase.from("artists").select("*").eq("user_id", data.user.id).single()
-  const { data: bookings } = await supabase.from("bookings").select("*").eq("artist_id", artist?.id).limit(5)
-  const { data: stats } = await supabase.from("bookings").select("status").eq("artist_id", artist?.id)
-
-  const confirmedBookings = stats?.filter(s => s.status === "confirmed").length || 0
-  const pendingBookings = stats?.filter(s => s.status === "pending").length || 0
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] text-white">
-      <div className="container mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Artist Dashboard</h1>
-              <p className="text-gray-400">Manage your music career and bookings</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link href="/artists/new">
-                <Button className="bg-[#10b981] hover:bg-[#0d9d6b] text-white">
+          <h1 className="text-3xl font-bold mb-2">Artist Dashboard</h1>
+          <p className="text-gray-400">Manage your bookings, track performance, and grow your fanbase</p>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Total Bookings</CardTitle>
+              <Calendar className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">Loading...</div>
+              <p className="text-xs text-gray-400">+12% from last month</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Fan Growth</CardTitle>
+              <Users className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">Loading...</div>
+              <p className="text-xs text-gray-400">+8.2% from last month</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Revenue</CardTitle>
+              <TrendingUp className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">Loading...</div>
+              <p className="text-xs text-gray-400">+15.3% from last month</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Rating</CardTitle>
+              <Star className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">Loading...</div>
+              <p className="text-xs text-gray-400">Based on 24 reviews</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Recent Bookings */}
+            <Card className="bg-[#2a2a2a] border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Recent Bookings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Your latest venue bookings and performance opportunities
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                        <Music className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">The Roxy Theatre</h3>
+                        <p className="text-sm text-gray-400">Los Angeles, CA • March 15, 2024</p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="bg-green-600 text-white">
+                      Confirmed
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                        <Calendar className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">Madison Square Garden</h3>
+                        <p className="text-sm text-gray-400">New York, NY • March 22, 2024</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="border-yellow-600 text-yellow-600">
+                      Pending
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Performance Analytics */}
+            <Card className="bg-[#2a2a2a] border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Performance Analytics</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Track your growth and engagement metrics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 flex items-center justify-center text-gray-400">
+                  <div className="text-center">
+                    <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+                    <p>Analytics charts will be displayed here</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card className="bg-[#2a2a2a] border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button className="w-full justify-start" variant="outline">
                   <Plus className="w-4 h-4 mr-2" />
+                  New Booking Request
+                </Button>
+                <Button className="w-full justify-start" variant="outline">
+                  <Settings className="w-4 h-4 mr-2" />
                   Update Profile
                 </Button>
-              </Link>
-              <Link href="/dashboard/artist/settings">
-                <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
+                <Button className="w-full justify-start" variant="outline">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  View Analytics
                 </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
+              </CardContent>
+            </Card>
 
-        {/* Artist Profile Card */}
-        {artist && (
-          <Card className="bg-[#2a2a2a] border-gray-800 mb-8">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-6">
-                {artist.image_url && (
-                  <img
-                    src={artist.image_url}
-                    alt={artist.name}
-                    className="w-20 h-20 rounded-full object-cover"
-                  />
-                )}
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-white mb-2">{artist.name}</h2>
-                  <div className="flex items-center gap-4 text-gray-400">
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      <span>{artist.followers?.toLocaleString() || 0} followers</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4" />
-                      <span>{artist.popularity || 0}% popularity</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4" />
-                      <span>4.8 rating</span>
+            {/* Upcoming Events */}
+            <Card className="bg-[#2a2a2a] border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Upcoming Events</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <div>
+                      <p className="text-sm font-medium text-white">The Roxy Theatre</p>
+                      <p className="text-xs text-gray-400">March 15, 2024</p>
                     </div>
                   </div>
-                  {artist.genres && artist.genres.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {artist.genres.slice(0, 3).map((genre: string, index: number) => (
-                        <Badge 
-                          key={index}
-                          variant="secondary" 
-                          className="text-xs bg-[#10b981]/20 text-[#10b981] border-[#10b981]/30"
-                        >
-                          {genre}
-                        </Badge>
-                      ))}
+                  <div className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    <div>
+                      <p className="text-sm font-medium text-white">Madison Square Garden</p>
+                      <p className="text-xs text-gray-400">March 22, 2024</p>
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-[#2a2a2a] border-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Confirmed Bookings</p>
-                  <p className="text-2xl font-bold text-white">{confirmedBookings}</p>
+            {/* Fan Demographics */}
+            <Card className="bg-[#2a2a2a] border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Fan Demographics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-400">18-24</span>
+                    <span className="text-sm text-white">35%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-400">25-34</span>
+                    <span className="text-sm text-white">45%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-400">35-44</span>
+                    <span className="text-sm text-white">20%</span>
+                  </div>
                 </div>
-                <Calendar className="w-8 h-8 text-[#10b981]" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#2a2a2a] border-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Pending Requests</p>
-                  <p className="text-2xl font-bold text-white">{pendingBookings}</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-[#10b981]" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#2a2a2a] border-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Followers</p>
-                  <p className="text-2xl font-bold text-white">{artist?.followers?.toLocaleString() || 0}</p>
-                </div>
-                <Users className="w-8 h-8 text-[#10b981]" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#2a2a2a] border-gray-800">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Popularity</p>
-                  <p className="text-2xl font-bold text-white">{artist?.popularity || 0}%</p>
-                </div>
-                <Star className="w-8 h-8 text-[#10b981]" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Bookings */}
-          <Card className="bg-[#2a2a2a] border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Recent Bookings
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                Your latest booking requests
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {bookings && bookings.length > 0 ? (
-                <div className="space-y-4">
-                  {bookings.map((booking) => (
-                    <div key={booking.id} className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-lg">
-                      <div>
-                        <h3 className="text-white font-semibold">Booking Request</h3>
-                        <p className="text-gray-400 text-sm">
-                          {new Date(booking.event_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          className={
-                            booking.status === "confirmed" 
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : booking.status === "pending"
-                              ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                              : "bg-gray-500/20 text-gray-400 border-gray-500/30"
-                          }
-                        >
-                          {booking.status}
-                        </Badge>
-                        <Link href={`/bookings/${booking.id}`}>
-                          <Button size="sm" variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800">
-                            View
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Calendar className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400 mb-4">No bookings yet</p>
-                  <Link href="/venues">
-                    <Button className="bg-[#10b981] hover:bg-[#0d9d6b] text-white">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      Find Venues
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="bg-[#2a2a2a] border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Link href="/venues">
-                  <Button className="w-full bg-[#10b981] hover:bg-[#0d9d6b] text-white">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    Find Venues
-                  </Button>
-                </Link>
-                <Link href="/bookings">
-                  <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    View All Bookings
-                  </Button>
-                </Link>
-                <Link href="/dashboard/artist/analytics">
-                  <Button variant="outline" className="w-full border-gray-700 text-gray-300 hover:bg-gray-800">
-                    <BarChart3 className="w-4 h-4 mr-2" />
-                    View Analytics
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

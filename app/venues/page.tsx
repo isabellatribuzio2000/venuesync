@@ -1,5 +1,7 @@
-import { Suspense } from "react"
-import { createClient } from "@/lib/supabase/server"
+'use client'
+
+import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { VenueList } from "@/components/venue/venue-list"
 import { VenueFilters } from "@/components/venue/venue-filters"
 import { Loading } from "@/components/ui/loading"
@@ -17,11 +19,51 @@ interface SearchParams {
 }
 
 interface VenuesPageProps {
-  searchParams: SearchParams
+  searchParams?: SearchParams
 }
 
-export default async function VenuesPage({ searchParams }: VenuesPageProps) {
-  const supabase = await createClient()
+export default function VenuesPage({ searchParams = {} }: VenuesPageProps) {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function initialize() {
+      const supabase = createClient()
+      
+      if (!supabase) {
+        setError("Application is not properly configured")
+        setLoading(false)
+        return
+      }
+
+      // No authentication required for public venues page
+      setLoading(false)
+    }
+
+    initialize()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
+          <p className="text-white mt-4">Loading venues...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-white">Configuration Required</h1>
+          <p className="text-gray-400">{error}</p>
+        </div>
+      </div>
+    )
+  }
 
   // Get filter values from search params
   const filters = {
@@ -31,50 +73,39 @@ export default async function VenuesPage({ searchParams }: VenuesPageProps) {
     venue_type: searchParams.venue_type || "",
     min_capacity: searchParams.min_capacity ? parseInt(searchParams.min_capacity) : undefined,
     max_capacity: searchParams.max_capacity ? parseInt(searchParams.max_capacity) : undefined,
-    page: searchParams.page ? parseInt(searchParams.page) : 1
+    page: parseInt(searchParams.page || "1")
   }
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] text-white">
-      <div className="container mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Building2 className="w-8 h-8 text-[#10b981]" />
-            <h1 className="text-3xl font-bold text-white">Venues</h1>
-          </div>
-          <p className="text-gray-400 text-lg">
-            Discover amazing venues for your next event
-          </p>
+          <h1 className="text-3xl font-bold mb-2">Venues</h1>
+          <p className="text-gray-400">Discover amazing venues for your next event</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="bg-[#2a2a2a] border-gray-800 sticky top-6">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Filter className="w-5 h-5" />
-                  Filters
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Refine your search
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Suspense fallback={<Loading text="Loading filters..." />}>
-                  <VenueFilters currentFilters={filters} />
-                </Suspense>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Filters */}
+        <div className="mb-8">
+          <VenueFilters currentFilters={filters} />
+        </div>
 
-          {/* Venues List */}
-          <div className="lg:col-span-3">
-            <Suspense fallback={<Loading text="Loading venues..." />}>
+        {/* Venues List */}
+        <div className="space-y-6">
+          <Card className="bg-[#2a2a2a] border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Building2 className="w-5 h-5 mr-2" />
+                All Venues
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                Browse and discover venues that match your criteria
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
               <VenueList filters={filters} />
-            </Suspense>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
